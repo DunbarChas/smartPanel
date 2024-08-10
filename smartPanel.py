@@ -56,15 +56,17 @@ class RunText():
 def connect_mqtt(run_text):
     def on_connect(client, userdata, flags, rc, properties):
         if rc == 0:
+            run_text.text = "Connect to MQTT Broker!"
             logging.info("Connected to MQTT Broker!")
         else:
+            run_text.text = "Failed to connect to Broker!"
             logging.error("Failed to connect, return code %d\n", rc)
     def on_message(client, userdata, msg):
         message = msg.payload.decode('utf-8')
         logging.info(f"Received message: {message}")
         run_text.text = message
     try:
-        client = mqtt_client.Client(client_id=client_id, callback_api_version=mqtt_client.callbackAPIVersion.VERSION2)
+        client = mqtt_client.Client(client_id=client_id, callback_api_version=mqtt_client.call)
         client.username_pw_set(username=username,password=password)
         client.on_connect = on_connect
         client.on_message = on_message
