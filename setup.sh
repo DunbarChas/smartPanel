@@ -27,7 +27,7 @@ After=network.target
 ExecStart=/usr/bin/python3 $PROJECT_DIR/smartPanel.py
 WorkingDirectory=$PROJECT_DIR
 Restart=always
-User=$USER
+User=root
 
 [Install]
 WantedBy=multi-user.target" | sudo tee /etc/systemd/system/smartPanel.service > /dev/null
