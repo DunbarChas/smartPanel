@@ -66,7 +66,7 @@ def connect_mqtt(run_text):
         logging.info(f"Received message: {message}")
         run_text.text = message
     try:
-        client = mqtt_client.Client(client_id=client_id, callback_api_version=mqtt_client.call)
+        client = mqtt_client.Client(client_id=client_id)
         client.username_pw_set(username=username,password=password)
         client.on_connect = on_connect
         client.on_message = on_message
