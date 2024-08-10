@@ -54,7 +54,7 @@ class RunText():
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
 def connect_mqtt(run_text):
-    def on_connect(client, userdata, flags, rc, properties):
+    def on_connect(client, userdata, flags, rc):
         if rc == 0:
             run_text.text = "Connect to MQTT Broker!"
             logging.info("Connected to MQTT Broker!")
