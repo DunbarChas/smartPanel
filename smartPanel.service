@@ -1,0 +1,12 @@
+[Unit]
+Description=Smart Panel MQTT to RGB Matrix
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /path/to/your/project/smartPanel.py
+WorkingDirectory=/path/to/your/project
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
