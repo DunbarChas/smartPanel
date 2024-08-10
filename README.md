@@ -53,4 +53,4 @@ This project allows you to display scrolling text on an RGB LED matrix connected
     - journalctl -u smartPanel.service
 
 ## License 
- - This project is licensed under the MIT License - see the LICENSE fiel for details
+ - This project is licensed under the MIT License - see the [LICENSE](https://github.com/DunbarChas/smartPanel/blob/main/LICENSE) fiel for details
