@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 import sys
 from rgbmatrix import graphics, RGBMatrix, RGBMatrixOptions
 from paho.mqtt import client as mqtt_client
+from datetime import date
 from random import random
+import json
 import time
 from concurrent.futures import ThreadPoolExecutor
 import threading
@@ -30,7 +32,12 @@ if not broker or not topic:
     sys.exit(1)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+class HomeAssistantMessage:
+    def __init__(self, message: str, brightness: int, timestamp: str, status: str):
+        self.message = message
+        self.brightness = brightness
+        self.timestamp = datetime.fromisoformat(timestamp)  # Convert string to datetime object
+        self.status = status
 class RunText():
     def __init__(self, *args, **kwargs):
         super(RunText, self).__init__(*args, **kwargs)
@@ -56,13 +63,22 @@ class RunText():
 def connect_mqtt(run_text):
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            run_text.text = "Connect to MQTT Broker!"
+            run_text.text = "Connected to MQTT Broker!"
             logging.info("Connected to MQTT Broker!")
         else:
             run_text.text = "Failed to connect to Broker!"
             logging.error("Failed to connect, return code %d\n", rc)
     def on_message(client, userdata, msg):
         message = msg.payload.decode('utf-8')
+        try:
+            assistantMessage = HomeAssistantMessage(**json.loads(message))
+        except json.JSONDecodeError as e:
+        
+            logging.error(f"Attempting to decode the message caused a json Decoding error the following error: {e} \n the message received was: {message} \n check to make sure the syntax of the payload is correct!")
+        
+        except Exception as e:
+            logging.error(f"Attempting to decode the message caused a generic exception the error was: {e} \n the message received was: {message}")
+
         logging.info(f"Received message: {message}")
         run_text.text = message
     try:
@@ -123,6 +139,7 @@ display_thread = None
 
 def handle_exit(signum, frame):
     global mqtt_thread, display_thread
+    run_text.text = ""
     if mqtt_thread:
         mqtt_thread.join()
     if display_thread:
@@ -152,3 +169,8 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         handle_exit(None, None)
+
+
+def handle_text(message):
+    if message.payload('utf8'):
+        print('test')
