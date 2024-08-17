@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import sys
 from rgbmatrix import graphics, RGBMatrix, RGBMatrixOptions
 from paho.mqtt import client as mqtt_client
-from datetime import date
+from datetime import datetime
 from random import random
 import json
 import time
@@ -72,6 +72,7 @@ def connect_mqtt(run_text):
         message = msg.payload.decode('utf-8')
         try:
             assistantMessage = HomeAssistantMessage(**json.loads(message))
+            run_text = assistantMessage.message
         except json.JSONDecodeError as e:
         
             logging.error(f"Attempting to decode the message caused a json Decoding error the following error: {e} \n the message received was: {message} \n check to make sure the syntax of the payload is correct!")
