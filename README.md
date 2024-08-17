@@ -35,8 +35,8 @@ This project allows you to display scrolling text on an RGB LED matrix connected
     ./setup.sh
  ```
 ### Step 3. Configure the Environment Variables
+- Modify the '.env' file in the project directory and set the following variables:
 ``` ini
- - Modify the '.env' file in the project directory and set the following variables:
   MQTT_BROKER=your_broker_address
   MQTT_PORT=1883
   MQTT_TOPIC=your/topic
