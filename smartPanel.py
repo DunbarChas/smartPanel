@@ -72,7 +72,7 @@ def connect_mqtt(run_text):
         message = msg.payload.decode('utf-8')
         try:
             assistantMessage = HomeAssistantMessage(**json.loads(message))
-            run_text = assistantMessage.message
+            run_text.text = assistantMessage.message
         except json.JSONDecodeError as e:
         
             logging.error(f"Attempting to decode the message caused a json Decoding error the following error: {e} \n the message received was: {message} \n check to make sure the syntax of the payload is correct!")
@@ -81,7 +81,6 @@ def connect_mqtt(run_text):
             logging.error(f"Attempting to decode the message caused a generic exception the error was: {e} \n the message received was: {message}")
 
         logging.info(f"Received message: {message}")
-        run_text.text = message
     try:
         client = mqtt_client.Client(client_id=client_id)
         client.username_pw_set(username=username,password=password)
