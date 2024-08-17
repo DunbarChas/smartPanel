@@ -35,14 +35,15 @@ This project allows you to display scrolling text on an RGB LED matrix connected
     ./setup.sh
  ```
 ### Step 3. Configure the Environment Variables
+``` ini
  - Modify the '.env' file in the project directory and set the following variables:
- - MQTT_BROKER=your_broker_address
- - MQTT_PORT=1883
- - MQTT_TOPIC=your/topic
- - MQTT_CLIENT_ID=your_client_id
- - MQTT_USERNAME=your_username
- - MQTT_PASSWORD=your_password
-
+  MQTT_BROKER=your_broker_address
+  MQTT_PORT=1883
+  MQTT_TOPIC=your/topic
+  MQTT_CLIENT_ID=your_client_id
+  MQTT_USERNAME=your_username
+  MQTT_PASSWORD=your_password
+```
 ### Step 4. Start the Service
  ```bash
     sudo systemctl start smartPanel.service
