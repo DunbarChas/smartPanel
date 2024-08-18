@@ -102,7 +102,7 @@ class RunText():
                 logging.error(f"Failed to parse color: {ham.color}. Error: {e}")
 
 
-async def connect_mqtt(run_text):
+async def connect_mqtt(run_text, loop):
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             run_text.text = "Connected to MQTT Broker!"
@@ -114,7 +114,7 @@ async def connect_mqtt(run_text):
         message = msg.payload.decode('utf-8')
         try:
             ham = HomeAssistantMessage(**json.loads(message))
-            asyncio.run_coroutine_threadsafe(run_text.update_text(ham), asyncio.get_event_loop())
+            asyncio.run_coroutine_threadsafe(run_text.update_text(ham), loop)
             logging.info(f"Ham data is: {ham}")
         except json.JSONDecodeError as e:
         
@@ -159,9 +159,9 @@ def handle_exit(sig, frame):
     asyncio.get_event_loop().stop()
 
 async def main():
-
+    loop = asyncio.get_running_loop()
     run_text = RunText()
-    client = await connect_mqtt(run_text)
+    client = await connect_mqtt(run_text,loop)
     client.subscribe(topic)
     
     display_task = asyncio.create_task(run_text.run())
