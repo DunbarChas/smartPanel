@@ -110,11 +110,11 @@ async def connect_mqtt(run_text):
         else:
             run_text.text = "Failed to connect to Broker!"
             logging.error("Failed to connect, return code %d\n", rc)
-    def on_message(client, userdata, msg):
+    async def on_message(client, userdata, msg):
         message = msg.payload.decode('utf-8')
         try:
             ham = HomeAssistantMessage(**json.loads(message))
-            run_text.update_text(ham)
+            await run_text.update_text(ham)
             logging.info(f"Ham data is: {ham}")
         except json.JSONDecodeError as e:
         
@@ -164,7 +164,7 @@ async def main():
     client = await connect_mqtt(run_text)
     client.subscribe(topic)
     
-    display_task = asyncio.create_task(await run_text.run())
+    display_task = asyncio.create_task(run_text.run())
     await display_task
 
 # Main function
