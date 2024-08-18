@@ -7,13 +7,10 @@ from dotenv import load_dotenv
 import sys
 from rgbmatrix import graphics, RGBMatrix, RGBMatrixOptions
 from paho.mqtt import client as mqtt_client
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import random
 import json
-import time
-from concurrent.futures import ThreadPoolExecutor
-import threading
-import signal
+import asyncio
 
 options = RGBMatrixOptions()
 options.rows = 16
@@ -33,17 +30,22 @@ if not broker or not topic:
 
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 class HomeAssistantMessage:
-    def __init__(self, message: str, brightness: int, timestamp: str, status: str):
+    def __init__(self, message: str, brightness: int, timestamp: str, status: str, color: str, font: str):
         self.message = message
         self.brightness = brightness
         self.timestamp = datetime.fromisoformat(timestamp)  # Convert string to datetime object
         self.status = status
+        self.color = color
+        self.font = font
+
 class RunText():
     def __init__(self, *args, **kwargs):
         super(RunText, self).__init__(*args, **kwargs)
         self.matrix = RGBMatrix(options=options)
         self.text = "Booting .... Hello World!"
-    def run(self):
+        self.ham = HomeAssistantMessage()
+
+    async def run(self):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
         font.LoadFont("fonts/7x13.bdf")
@@ -51,16 +53,20 @@ class RunText():
         pos = offscreen_canvas.width
        
         while True:
+            if datetime.now() > self.ham.timestamp + timedelta(hours=2):
+                self.text = ""
             offscreen_canvas.Clear()
             len = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text)
             pos -= 1
             if (pos + len < 0):
                 pos = offscreen_canvas.width
-
-            time.sleep(0.1)
+            await asyncio.sleep(0.05)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
+    def update_text(self, ham):
+        self.ham = ham
+        self.text = ham.message
 
-def connect_mqtt(run_text):
+async def connect_mqtt(run_text):
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             run_text.text = "Connected to MQTT Broker!"
@@ -71,16 +77,15 @@ def connect_mqtt(run_text):
     def on_message(client, userdata, msg):
         message = msg.payload.decode('utf-8')
         try:
-            assistantMessage = HomeAssistantMessage(**json.loads(message))
-            run_text.text = assistantMessage.message
+            ham = HomeAssistantMessage(**json.loads(message))
+            run_text.update_text(ham)
         except json.JSONDecodeError as e:
         
             logging.error(f"Attempting to decode the message caused a json Decoding error the following error: {e} \n the message received was: {message} \n check to make sure the syntax of the payload is correct!")
         
         except Exception as e:
             logging.error(f"Attempting to decode the message caused a generic exception the error was: {e} \n the message received was: {message}")
-        time.sleep(0.1)
-        logging.info(f"Received message: {message}")
+
     try:
         client = mqtt_client.Client(client_id=client_id)
         client.username_pw_set(username=username,password=password)
@@ -93,84 +98,40 @@ def connect_mqtt(run_text):
         logging.error(f"Failed to connect to MQTT Broker: {e}")
         sys.exit(1)
     
-    
-
 FIRST_RECONNECT_DELAY = 1
 RECONNECT_RATE = 2
 MAX_RECONNECT_COUNT = 12
 MAX_RECONNECT_DELAY = 60
 
-def on_disconnect(client, userdata, rc):
+async def on_disconnect(client, userdata, rc):
     reconnect_count, reconnect_delay = 0, FIRST_RECONNECT_DELAY
     while reconnect_count < MAX_RECONNECT_COUNT:
-        time.sleep(reconnect_delay)
-
+        await asyncio.sleep(reconnect_delay)
         try:
             client.reconnect()
             return
         except Exception as err:
              logging.error(err)
-
         reconnect_delay *= RECONNECT_RATE
         reconnect_delay = min(reconnect_delay, MAX_RECONNECT_DELAY)
         reconnect_count += 1
 
+def handle_exit(sig, frame):
+    logging.warning("Shutting down gracefully...")
+    asyncio.get_event_loop().stop()
 
+async def main():
 
-def start_mqtt(client):
-    client.loop_forever()
+    run_text = RunText()
+    client = await connect_mqtt(run_text)
+    client.subscribe(topic)
 
-def start_display(run_text):
-    try:
-        run_text.run()
-    except Exception as e:
-        logging.error(f"Failed to initialize RGB Matrix: {e}")
-        sys.exit(1)
-
-haltCalled = False
-def stop():
-    global haltCalled
-    haltCalled = True
-    client.disconnect()
-    run_text.matrix.Clear()
-
-mqtt_thread = None
-display_thread = None
-
-def handle_exit(signum, frame):
-    global mqtt_thread, display_thread
-    run_text.text = ""
-    if mqtt_thread:
-        mqtt_thread.join()
-    if display_thread:
-        display_thread.join()
-    stop()
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, handle_exit)
-signal.signal(signal.SIGTERM, handle_exit)
+    display_task = asyncio.create_task(run_text.run())
+    await display_task
 
 # Main function
 if __name__ == "__main__":
-    run_text = RunText()
-    
-    client = connect_mqtt(run_text)
-    client.subscribe(topic)
-        
-    mqtt_thread = threading.Thread(target=start_mqtt, args=(client,))
-    display_thread = threading.Thread(target=start_display, args=(run_text,))
-        
-    mqtt_thread.start()
-    display_thread.start()
     try:
-        while True:
-            if haltCalled:
-                break
-            time.sleep(1)
+        asyncio.run(main())
     except KeyboardInterrupt:
-        handle_exit(None, None)
-
-
-def handle_text(message):
-    if message.payload('utf8'):
-        print('test')
+        sys.exit(0)
