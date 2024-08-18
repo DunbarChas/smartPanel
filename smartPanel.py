@@ -57,6 +57,7 @@ class RunText():
     async def run(self):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
+        font.LoadFont(self.currentFont)
         textColor = graphics.Color(*self.currentColor) 
         pos = offscreen_canvas.width
 
@@ -77,8 +78,9 @@ class RunText():
                 textColor = graphics.Color(*self.currentColor)
                 self.color_changed = False
                 logging.info(f"New color: {self.currentColor}")
-
-            length = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text) #Maybe update to not be 10 on the y
+                
+            y_position = offscreen_canvas.height//2
+            length = graphics.DrawText(offscreen_canvas, font, pos, y_position, textColor, self.text) #Maybe update to not be 10 on the y
             pos -= 1
             if (pos + length < 0):
                 pos = offscreen_canvas.width
