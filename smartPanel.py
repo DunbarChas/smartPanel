@@ -160,7 +160,7 @@ async def main():
     client = await connect_mqtt(run_text)
     client.subscribe(topic)
     
-    display_task = asyncio.create_task(run_text.run())
+    display_task = asyncio.create_task(await run_text.run())
     await display_task
 
 # Main function
