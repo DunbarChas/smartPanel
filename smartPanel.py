@@ -44,12 +44,13 @@ class RunText():
         self.matrix = RGBMatrix(options=options)
         self.text = "Booting .... Hello World!"
         self.ham = HomeAssistantMessage()
-
+        self.currentFont = "fonts/7x13.bdf"
+        self.currentColor = [255,255,0]
     async def run(self):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
-        font.LoadFont("fonts/7x13.bdf")
-        textColor = graphics.Color(255, 255, 0)
+        font.LoadFont(self.currentFont)
+        textColor = graphics.Color(self.currentColor)
         pos = offscreen_canvas.width
        
         while True:
@@ -62,9 +63,20 @@ class RunText():
                 pos = offscreen_canvas.width
             await asyncio.sleep(0.05)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
+
     def update_text(self, ham):
+        somethingChanged = False
         self.ham = ham
         self.text = ham.message
+        if ham.font != "" and ham.font != self.currentFont:
+            self.currentFont = ham.font
+            somethingChanged = True
+        if ham.currentColor != "" and ham.currentColor != self.currentColor:
+            self.currentColor = ham.currentColor
+            somethingChanged = True
+        if somethingChanged:
+            self.run()
+
 
 async def connect_mqtt(run_text):
     def on_connect(client, userdata, flags, rc):
@@ -79,7 +91,7 @@ async def connect_mqtt(run_text):
         try:
             ham = HomeAssistantMessage(**json.loads(message))
             run_text.update_text(ham)
-            logging.info(f"Ham is: {ham}")
+            logging.info(f"Ham message is: {ham.message}")
         except json.JSONDecodeError as e:
         
             logging.error(f"Attempting to decode the message caused a json Decoding error the following error: {e} \n the message received was: {message} \n check to make sure the syntax of the payload is correct!")
