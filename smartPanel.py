@@ -25,7 +25,7 @@ client_id = os.getenv('MQTT_CLIENT_ID', f'client-{random()}')
 username = os.getenv('MQTT_USERNAME', None)
 password = os.getenv('MQTT_PASSWORD', None)
 
-if not broker or not topic:
+if not broker or not topic or broker == 'localhost':
     logging.error("MQTT_BROKER and MQTT_TOPIC must be set in the .env file!")
     sys.exit(1)
 
@@ -61,7 +61,7 @@ class RunText():
         pos = offscreen_canvas.width
 
         while True:
-            
+
             if datetime.now().replace(tzinfo=None) > self.ham.timestamp.replace(tzinfo=None) + timedelta(hours=2):
                 self.text = ""
             offscreen_canvas.Clear()
@@ -78,9 +78,9 @@ class RunText():
                 self.color_changed = False
                 logging.info(f"New color: {self.currentColor}")
 
-            len = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text)
+            length = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text) #Maybe update to not be 10 on the y
             pos -= 1
-            if (pos + len < 0):
+            if (pos + length < 0):
                 pos = offscreen_canvas.width
             await asyncio.sleep(0.05)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
@@ -102,7 +102,11 @@ class RunText():
                 except (ValueError, SyntaxError) as e:
                     logging.error(f"Failed to parse color: {ham.color}. Error: {e}")
 
-
+    
+FIRST_RECONNECT_DELAY = 1
+RECONNECT_RATE = 2
+MAX_RECONNECT_COUNT = 12
+MAX_RECONNECT_DELAY = 60
 async def connect_mqtt(run_text):
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -123,7 +127,18 @@ async def connect_mqtt(run_text):
         
         except Exception as e:
             logging.error(f"Attempting to decode the message caused a generic exception the error was: {e} \n the message received was: {message}")
-
+    async def on_disconnect(client, userdata, rc):
+        reconnect_count, reconnect_delay = 0, FIRST_RECONNECT_DELAY
+        while reconnect_count < MAX_RECONNECT_COUNT:
+            await asyncio.sleep(reconnect_delay)
+            try:
+                client.reconnect()
+                return
+            except Exception as err:
+                logging.error(err)
+            reconnect_delay *= RECONNECT_RATE
+            reconnect_delay = min(reconnect_delay, MAX_RECONNECT_DELAY)
+            reconnect_count += 1
     try:
         client = mqtt_client.Client(client_id=client_id)
         client.username_pw_set(username=username,password=password)
@@ -136,30 +151,16 @@ async def connect_mqtt(run_text):
     except Exception as e:
         logging.error(f"Failed to connect to MQTT Broker: {e}")
         sys.exit(1)
-    
-FIRST_RECONNECT_DELAY = 1
-RECONNECT_RATE = 2
-MAX_RECONNECT_COUNT = 12
-MAX_RECONNECT_DELAY = 60
 
-async def on_disconnect(client, userdata, rc):
-    reconnect_count, reconnect_delay = 0, FIRST_RECONNECT_DELAY
-    while reconnect_count < MAX_RECONNECT_COUNT:
-        await asyncio.sleep(reconnect_delay)
-        try:
-            client.reconnect()
-            return
-        except Exception as err:
-             logging.error(err)
-        reconnect_delay *= RECONNECT_RATE
-        reconnect_delay = min(reconnect_delay, MAX_RECONNECT_DELAY)
-        reconnect_count += 1
+
+
 
 def handle_exit(sig, frame):
     logging.warning("Shutting down gracefully...")
     asyncio.get_event_loop().stop()
 
 async def main():
+
     run_text = RunText()
     client = await connect_mqtt(run_text)
     client.subscribe(topic)
