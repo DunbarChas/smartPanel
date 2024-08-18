@@ -61,22 +61,23 @@ class RunText():
         pos = offscreen_canvas.width
 
         while True:
-            #if datetime.now().replace(tzinfo=None) > self.ham.timestamp.replace(tzinfo=None) + timedelta(hours=2):
-            #    self.text = ""
-            #offscreen_canvas.Clear()
-#
-            ## Reload the font if it changed
-            #if self.font_changed:  
-            #    font.LoadFont(self.currentFont)
-            #    self.font_changed = False
-            #    logging.info(f"New font choosen: {self.currentFont}")
-#
-            ## Update color if it changed
-            #if self.color_changed:
-            #    textColor = graphics.Color(*self.currentColor)
-            #    self.color_changed = False
-            #    logging.info(f"New color: {self.currentColor}")
-#
+            
+            if datetime.now().replace(tzinfo=None) > self.ham.timestamp.replace(tzinfo=None) + timedelta(hours=2):
+                self.text = ""
+            offscreen_canvas.Clear()
+
+            # Reload the font if it changed
+            if self.font_changed:  
+                font.LoadFont(self.currentFont)
+                self.font_changed = False
+                logging.info(f"New font choosen: {self.currentFont}")
+
+            # Update color if it changed
+            if self.color_changed:
+                textColor = graphics.Color(*self.currentColor)
+                self.color_changed = False
+                logging.info(f"New color: {self.currentColor}")
+
             len = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text)
             pos -= 1
             if (pos + len < 0):
@@ -84,7 +85,7 @@ class RunText():
             await asyncio.sleep(0.05)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
-    async def update_text(self, ham):
+    def update_text(self, ham):
         self.ham = ham
         self.text = ham.message
 
@@ -102,7 +103,7 @@ class RunText():
                     logging.error(f"Failed to parse color: {ham.color}. Error: {e}")
 
 
-async def connect_mqtt(run_text, loop):
+async def connect_mqtt(run_text):
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             run_text.text = "Connected to MQTT Broker!"
@@ -114,7 +115,7 @@ async def connect_mqtt(run_text, loop):
         message = msg.payload.decode('utf-8')
         try:
             ham = HomeAssistantMessage(**json.loads(message))
-            asyncio.run_coroutine_threadsafe(run_text.update_text(ham), loop)
+            run_text.update_text(ham)
             logging.info(f"Ham data is: {ham}")
         except json.JSONDecodeError as e:
         
@@ -159,9 +160,8 @@ def handle_exit(sig, frame):
     asyncio.get_event_loop().stop()
 
 async def main():
-    loop = asyncio.get_running_loop()
     run_text = RunText()
-    client = await connect_mqtt(run_text,loop)
+    client = await connect_mqtt(run_text)
     client.subscribe(topic)
     
     display_task = asyncio.create_task(run_text.run())
