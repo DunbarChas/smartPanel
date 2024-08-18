@@ -31,7 +31,7 @@ if not broker or not topic:
     logging.error("MQTT_BROKER and MQTT_TOPIC must be set in the .env file!")
     sys.exit(1)
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 class HomeAssistantMessage:
     def __init__(self, message: str, brightness: int, timestamp: str, status: str):
         self.message = message
@@ -57,7 +57,7 @@ class RunText():
             if (pos + len < 0):
                 pos = offscreen_canvas.width
 
-            time.sleep(0.05)
+            time.sleep(0.1)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
 def connect_mqtt(run_text):
@@ -79,7 +79,7 @@ def connect_mqtt(run_text):
         
         except Exception as e:
             logging.error(f"Attempting to decode the message caused a generic exception the error was: {e} \n the message received was: {message}")
-
+        time.sleep(0.1)
         logging.info(f"Received message: {message}")
     try:
         client = mqtt_client.Client(client_id=client_id)
