@@ -31,7 +31,7 @@ This project allows you to display scrolling text on an RGB LED matrix connected
  ```
 ### Step 2. Run the Setup Script
  ```bash
-     chmod +x setup.sh
+    chmod +x setup.sh
     sudo ./setup.sh
  ```
 ### Step 3. Configure the Environment Variables
@@ -89,7 +89,7 @@ input_text:
             retain: true
 
 ```
-### Step 6. Create a custom card in love lance (Main Home Assistant dashboard)
+### Step 6. Create a custom card in lovelace (Main Home Assistant dashboard)
  While this is highly dependent on how you would like your Home Assistant dasboard to look here is a simple one to get you started! 
  ``` yaml
 type: vertical-stack
@@ -111,4 +111,4 @@ cards:
     - journalctl -u smartPanel.service
 
 ## License 
- - This project is licensed under the MIT License - see the [LICENSE](https://github.com/DunbarChas/smartPanel/blob/main/LICENSE) fiel for details
+ - This project is licensed under the MIT License - see the [LICENSE](https://github.com/DunbarChas/smartPanel/blob/main/LICENSE) file for details
