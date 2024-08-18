@@ -92,14 +92,14 @@ class RunText():
             self.currentFont = ham.font
             self.font_changed = True
             logging.info(f"New font found from home assistant: {ham.font}")
-
-        if ham.color and ham.color != self.currentColor:
-            try:
-                self.currentColor = ast.literal_eval(ham.color)
-                self.color_changed = True
-                logging.info(f"New color found: {ham.color}")
-            except (ValueError, SyntaxError) as e:
-                logging.error(f"Failed to parse color: {ham.color}. Error: {e}")
+        if ham.color: 
+            if ast.literal_eval(ham.color) != self.currentColor:
+                try:
+                    self.currentColor = ast.literal_eval(ham.color)
+                    self.color_changed = True
+                    logging.info(f"New color found: {ham.color}")
+                except (ValueError, SyntaxError) as e:
+                    logging.error(f"Failed to parse color: {ham.color}. Error: {e}")
 
 
 async def connect_mqtt(run_text, loop):
