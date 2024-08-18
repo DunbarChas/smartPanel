@@ -94,7 +94,7 @@ async def connect_mqtt(run_text):
         client.on_message = on_message
         client.connect(broker,port)
         client.on_disconnect = on_disconnect
-        client.loop_forever()
+        client.loop_start()
         return client
     except Exception as e:
         logging.error(f"Failed to connect to MQTT Broker: {e}")
