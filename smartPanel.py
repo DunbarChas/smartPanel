@@ -10,6 +10,7 @@ from paho.mqtt import client as mqtt_client
 from datetime import datetime, timedelta
 from random import random
 import json
+import ast
 import asyncio
 
 options = RGBMatrixOptions()
@@ -49,18 +50,31 @@ class RunText():
         self.text = "Booting .... Hello World!"
         self.ham = HomeAssistantMessage()
         self.currentFont = "fonts/7x13.bdf"
-        self.currentColor = [255,255,0]
+        self.currentColor = [255, 255, 0]
+        self.font_changed = False
+        self.color_changed = False
+
     async def run(self):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
-        font.LoadFont(self.currentFont)
         textColor = graphics.Color(*self.currentColor)
         pos = offscreen_canvas.width
-       
+
         while True:
             if datetime.now().replace(tzinfo=None) > self.ham.timestamp.replace(tzinfo=None) + timedelta(hours=2):
                 self.text = ""
             offscreen_canvas.Clear()
+
+            # Reload the font if it changed
+            if self.font_changed:
+                font.LoadFont(self.currentFont)
+                self.font_changed = False
+
+            # Update color if it changed
+            if self.color_changed:
+                textColor = graphics.Color(*self.currentColor)
+                self.color_changed = False
+
             len = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text)
             pos -= 1
             if (pos + len < 0):
@@ -68,18 +82,20 @@ class RunText():
             await asyncio.sleep(0.05)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
-    def update_text(self, ham):
-        somethingChanged = False
+    async def update_text(self, ham):
         self.ham = ham
         self.text = ham.message
-        if ham.font != "" and ham.font != self.currentFont:
+
+        if ham.font and ham.font != self.currentFont:
             self.currentFont = ham.font
-            somethingChanged = True
-        if ham.color != "" and ham.color != self.currentColor:
-            self.currentColor = ham.color
-            somethingChanged = True
-        if somethingChanged:
-            self.run()
+            self.font_changed = True
+
+        if ham.color and ham.color != self.currentColor:
+            try:
+                self.currentColor = ast.literal_eval(ham.color)
+                self.color_changed = True
+            except (ValueError, SyntaxError) as e:
+                logging.error(f"Failed to parse color: {ham.color}. Error: {e}")
 
 
 async def connect_mqtt(run_text):
