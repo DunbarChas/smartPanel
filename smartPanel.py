@@ -94,6 +94,7 @@ async def connect_mqtt(run_text):
         client.on_message = on_message
         client.connect(broker,port)
         client.on_disconnect = on_disconnect
+        client.loop_forever()
         return client
     except Exception as e:
         logging.error(f"Failed to connect to MQTT Broker: {e}")
@@ -126,7 +127,7 @@ async def main():
     run_text = RunText()
     client = await connect_mqtt(run_text)
     client.subscribe(topic)
-
+    
     display_task = asyncio.create_task(run_text.run())
     await display_task
 
