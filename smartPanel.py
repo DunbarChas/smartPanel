@@ -28,7 +28,7 @@ if not broker or not topic:
     logging.error("MQTT_BROKER and MQTT_TOPIC must be set in the .env file!")
     sys.exit(1)
 
-logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 class HomeAssistantMessage:
     def __init__(self, message: str = "", brightness: int = 100, timestamp: str = "", status: str = "", color: str = "", font: str = ""):
         self.message = message
@@ -79,6 +79,7 @@ async def connect_mqtt(run_text):
         try:
             ham = HomeAssistantMessage(**json.loads(message))
             run_text.update_text(ham)
+            logging.info(f"Ham is: {ham}")
         except json.JSONDecodeError as e:
         
             logging.error(f"Attempting to decode the message caused a json Decoding error the following error: {e} \n the message received was: {message} \n check to make sure the syntax of the payload is correct!")
