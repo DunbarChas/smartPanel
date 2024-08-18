@@ -37,6 +37,10 @@ class HomeAssistantMessage:
         self.status = status
         self.color = color
         self.font = font
+    def __repr__(self):
+        return (f"HomeAssistantMessage(message={self.message}, brightness={self.brightness}, "
+                f"timestamp={self.timestamp}, status={self.status}, color={self.color}, font={self.font})")
+
 
 class RunText():
     def __init__(self, *args, **kwargs):
@@ -50,7 +54,7 @@ class RunText():
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
         font.LoadFont(self.currentFont)
-        textColor = graphics.Color(self.currentColor)
+        textColor = graphics.Color(*self.currentColor)
         pos = offscreen_canvas.width
        
         while True:
@@ -91,7 +95,7 @@ async def connect_mqtt(run_text):
         try:
             ham = HomeAssistantMessage(**json.loads(message))
             run_text.update_text(ham)
-            logging.info(f"Ham message is: {ham.message}")
+            logging.info(f"Ham data is: {ham}")
         except json.JSONDecodeError as e:
         
             logging.error(f"Attempting to decode the message caused a json Decoding error the following error: {e} \n the message received was: {message} \n check to make sure the syntax of the payload is correct!")
