@@ -30,7 +30,7 @@ if not broker or not topic:
 
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 class HomeAssistantMessage:
-    def __init__(self, message: str = "", brightness: int = 100, timestamp: str = "", status: str = "", color: str = "", font: str = ""):
+    def __init__(self, message: str = "", brightness: int = 100, timestamp: str = datetime.now, status: str = "", color: str = "", font: str = ""):
         self.message = message
         self.brightness = brightness
         self.timestamp = datetime.fromisoformat(timestamp)  # Convert string to datetime object
