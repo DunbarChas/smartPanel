@@ -57,26 +57,26 @@ class RunText():
     async def run(self):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
-        textColor = graphics.Color(*self.currentColor)
+        textColor = graphics.Color(*self.currentColor) 
         pos = offscreen_canvas.width
 
         while True:
-            if datetime.now().replace(tzinfo=None) > self.ham.timestamp.replace(tzinfo=None) + timedelta(hours=2):
-                self.text = ""
-            offscreen_canvas.Clear()
-
-            # Reload the font if it changed
-            if self.font_changed:
-                font.LoadFont(self.currentFont)
-                self.font_changed = False
-                logging.info(f"New font choosen: {self.currentFont}")
-
-            # Update color if it changed
-            if self.color_changed:
-                textColor = graphics.Color(*self.currentColor)
-                self.color_changed = False
-                logging.info(f"New color: {self.currentColor}")
-
+            #if datetime.now().replace(tzinfo=None) > self.ham.timestamp.replace(tzinfo=None) + timedelta(hours=2):
+            #    self.text = ""
+            #offscreen_canvas.Clear()
+#
+            ## Reload the font if it changed
+            #if self.font_changed:  
+            #    font.LoadFont(self.currentFont)
+            #    self.font_changed = False
+            #    logging.info(f"New font choosen: {self.currentFont}")
+#
+            ## Update color if it changed
+            #if self.color_changed:
+            #    textColor = graphics.Color(*self.currentColor)
+            #    self.color_changed = False
+            #    logging.info(f"New color: {self.currentColor}")
+#
             len = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text)
             pos -= 1
             if (pos + len < 0):
