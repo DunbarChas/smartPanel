@@ -69,11 +69,13 @@ class RunText():
             if self.font_changed:
                 font.LoadFont(self.currentFont)
                 self.font_changed = False
+                logging.info(f"New font choosen: {self.currentFont}")
 
             # Update color if it changed
             if self.color_changed:
                 textColor = graphics.Color(*self.currentColor)
                 self.color_changed = False
+                logging.info(f"New color: {self.currentColor}")
 
             len = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text)
             pos -= 1
@@ -89,11 +91,13 @@ class RunText():
         if ham.font and ham.font != self.currentFont:
             self.currentFont = ham.font
             self.font_changed = True
+            logging.info(f"New font found from home assistant: {ham.font}")
 
         if ham.color and ham.color != self.currentColor:
             try:
                 self.currentColor = ast.literal_eval(ham.color)
                 self.color_changed = True
+                logging.info(f"New color found: {ham.color}")
             except (ValueError, SyntaxError) as e:
                 logging.error(f"Failed to parse color: {ham.color}. Error: {e}")
 
