@@ -71,8 +71,8 @@ class RunText():
         if ham.font != "" and ham.font != self.currentFont:
             self.currentFont = ham.font
             somethingChanged = True
-        if ham.currentColor != "" and ham.currentColor != self.currentColor:
-            self.currentColor = ham.currentColor
+        if ham.color != "" and ham.color != self.currentColor:
+            self.currentColor = ham.color
             somethingChanged = True
         if somethingChanged:
             self.run()
