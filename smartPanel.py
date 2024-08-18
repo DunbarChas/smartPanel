@@ -53,7 +53,7 @@ class RunText():
         pos = offscreen_canvas.width
        
         while True:
-            if datetime.now() > self.ham.timestamp + timedelta(hours=2):
+            if datetime.now().replace(tzinfo=None) > self.ham.timestamp.replace(tzinfo=None) + timedelta(hours=2):
                 self.text = ""
             offscreen_canvas.Clear()
             len = graphics.DrawText(offscreen_canvas, font, pos, 10, textColor, self.text)
